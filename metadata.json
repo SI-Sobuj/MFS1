@@ -1,0 +1,6 @@
+{
+  "name": "TakaPay",
+  "description": "Real-time Mobile Financial Services (MFS) app inspired by bKash, Nagad, and Rocket with instant balance tracking, savings vaults, cash in/out, P2P transfers, utility bill pay, mobile recharge, QR merchant payments, and biometric authentication.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}

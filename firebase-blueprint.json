@@ -1,0 +1,320 @@
+{
+  "entities": {
+    "WalletProfile": {
+      "title": "WalletProfile",
+      "description": "Real-time MFS wallet account profile storing balance, savings summary, reward points, KYC tier, and biometric preference.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated Firebase UID owning this wallet."
+        },
+        "displayName": {
+          "type": "string",
+          "description": "Account holder display name."
+        },
+        "accountNumber": {
+          "type": "string",
+          "description": "MFS mobile wallet number (e.g., 01711-XXXXXX)."
+        },
+        "pinHash": {
+          "type": "string",
+          "description": "Hashed MFS PIN for transaction authorization."
+        },
+        "biometricEnabled": {
+          "type": "boolean",
+          "description": "Whether biometric touch/face authentication is enabled for MFS transactions."
+        },
+        "balanceBdt": {
+          "type": "number",
+          "description": "Available liquid MFS balance in BDT."
+        },
+        "totalSavingsBdt": {
+          "type": "number",
+          "description": "Total accumulated savings across all active DPS and savings vaults in BDT."
+        },
+        "rewardPoints": {
+          "type": "integer",
+          "description": "TakaPay reward points earned from transactions."
+        },
+        "kycTier": {
+          "type": "string",
+          "enum": ["Verified", "Premier", "Student"],
+          "description": "MFS account verification tier."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when wallet was created (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when wallet was last updated (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "userId",
+        "displayName",
+        "accountNumber",
+        "pinHash",
+        "biometricEnabled",
+        "balanceBdt",
+        "totalSavingsBdt",
+        "rewardPoints",
+        "kycTier",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "MfsTransaction": {
+      "title": "MfsTransaction",
+      "description": "Financial transaction record for Send Money, Add Money, Cash Out, Mobile Recharge, Utility Bill, Merchant QR Payment, or Savings transfer.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated user UID owning this ledger entry."
+        },
+        "type": {
+          "type": "string",
+          "enum": [
+            "SEND_MONEY",
+            "ADD_MONEY",
+            "CASH_OUT",
+            "MOBILE_RECHARGE",
+            "UTILITY_BILL",
+            "MERCHANT_PAY",
+            "SAVINGS_DEPOSIT",
+            "SAVINGS_WITHDRAW"
+          ],
+          "description": "MFS transaction category."
+        },
+        "title": {
+          "type": "string",
+          "description": "Human-readable transaction summary."
+        },
+        "recipientNumber": {
+          "type": "string",
+          "description": "Target mobile number, meter number, biller ID, or merchant code."
+        },
+        "recipientName": {
+          "type": "string",
+          "description": "Recipient, merchant, or biller display name."
+        },
+        "operatorOrProvider": {
+          "type": "string",
+          "description": "Telco operator, utility provider, bank, or merchant category."
+        },
+        "amountBdt": {
+          "type": "number",
+          "description": "Principal transaction amount in BDT."
+        },
+        "feeBdt": {
+          "type": "number",
+          "description": "Service fee or cash-out charge in BDT."
+        },
+        "cashbackBdt": {
+          "type": "number",
+          "description": "Instant cashback credited in BDT."
+        },
+        "balanceAfterBdt": {
+          "type": "number",
+          "description": "Wallet balance immediately following the transaction in BDT."
+        },
+        "referenceNote": {
+          "type": "string",
+          "description": "Optional user reference or invoice note."
+        },
+        "trxId": {
+          "type": "string",
+          "description": "Unique MFS Transaction ID (e.g., TKP98X4M2L)."
+        },
+        "authMethod": {
+          "type": "string",
+          "enum": ["BIOMETRIC", "PIN"],
+          "description": "Security authentication method used to authorize the transaction."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["COMPLETED"],
+          "description": "Settlement status of the transaction."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of the transaction (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp of the last update (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "userId",
+        "type",
+        "title",
+        "recipientNumber",
+        "recipientName",
+        "operatorOrProvider",
+        "amountBdt",
+        "feeBdt",
+        "cashbackBdt",
+        "balanceAfterBdt",
+        "referenceNote",
+        "trxId",
+        "authMethod",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "SavingsGoal": {
+      "title": "SavingsGoal",
+      "description": "Real-time savings vault or DPS goal linked to the user's MFS wallet.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated user UID."
+        },
+        "title": {
+          "type": "string",
+          "description": "Name of the savings vault or DPS goal."
+        },
+        "category": {
+          "type": "string",
+          "enum": ["DPS", "Emergency", "Festival", "Education", "Gadget", "Travel"],
+          "description": "Savings goal category."
+        },
+        "targetAmountBdt": {
+          "type": "number",
+          "description": "Target maturity or savings goal amount in BDT."
+        },
+        "savedAmountBdt": {
+          "type": "number",
+          "description": "Current accumulated balance in this savings goal in BDT."
+        },
+        "monthlyDepositBdt": {
+          "type": "number",
+          "description": "Planned monthly installment amount in BDT."
+        },
+        "interestRatePercent": {
+          "type": "number",
+          "description": "Annual profit/interest rate percentage."
+        },
+        "institutionName": {
+          "type": "string",
+          "description": "Partner bank or financial institution hosting the DPS/Vault."
+        },
+        "autoSaveRoundUp": {
+          "type": "boolean",
+          "description": "Whether spare change round-up is enabled for this goal."
+        },
+        "status": {
+          "type": "string",
+          "enum": ["ACTIVE", "COMPLETED", "WITHDRAWN"],
+          "description": "Current status of the savings vault."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when goal was created (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when goal was last updated (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "userId",
+        "title",
+        "category",
+        "targetAmountBdt",
+        "savedAmountBdt",
+        "monthlyDepositBdt",
+        "interestRatePercent",
+        "institutionName",
+        "autoSaveRoundUp",
+        "status",
+        "createdAt",
+        "updatedAt"
+      ]
+    },
+    "SavedBiller": {
+      "title": "SavedBiller",
+      "description": "Saved utility biller, favorite P2P contact, merchant QR, or cash-out agent for quick repeat transactions.",
+      "type": "object",
+      "properties": {
+        "userId": {
+          "type": "string",
+          "description": "Authenticated user UID."
+        },
+        "billerType": {
+          "type": "string",
+          "enum": ["CONTACT", "UTILITY", "MERCHANT", "AGENT"],
+          "description": "Type of saved beneficiary."
+        },
+        "name": {
+          "type": "string",
+          "description": "Display label for the saved biller or contact."
+        },
+        "accountOrMeterNo": {
+          "type": "string",
+          "description": "Phone number, meter number, customer ID, or merchant code."
+        },
+        "providerCategory": {
+          "type": "string",
+          "description": "Utility category or operator name (e.g., Electricity, Gas, Water, Internet, Personal)."
+        },
+        "createdAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when created (FieldValue.serverTimestamp())."
+        },
+        "updatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "Server timestamp when updated (FieldValue.serverTimestamp())."
+        }
+      },
+      "required": [
+        "userId",
+        "billerType",
+        "name",
+        "accountOrMeterNo",
+        "providerCategory",
+        "createdAt",
+        "updatedAt"
+      ]
+    }
+  },
+  "firestore": {
+    "/wallets/{userId}": {
+      "schema": {
+        "$ref": "#/entities/WalletProfile"
+      },
+      "description": "Stores each user's real-time MFS wallet balance, savings total, and security preferences."
+    },
+    "/users/{userId}/transactions/{transactionId}": {
+      "schema": {
+        "$ref": "#/entities/MfsTransaction"
+      },
+      "description": "Stores real-time MFS transaction history per user."
+    },
+    "/users/{userId}/savings_goals/{goalId}": {
+      "schema": {
+        "$ref": "#/entities/SavingsGoal"
+      },
+      "description": "Stores real-time DPS and savings vaults per user."
+    },
+    "/users/{userId}/saved_billers/{billerId}": {
+      "schema": {
+        "$ref": "#/entities/SavedBiller"
+      },
+      "description": "Stores saved utility billers, favorite contacts, and merchants per user."
+    }
+  }
+}

@@ -1,0 +1,22 @@
+<resources>
+    <string name="app_name">TakaPay</string>
+    <string name="auth_headline">Next-Gen Mobile Financial Services</string>
+    <string name="auth_subheadline">Instant P2P transfers, Cash In &amp; Out, Mobile Recharge, Utility Bill Pay, QR Merchant Payments, and high-yield DPS Savings Vaults secured by Biometrics.</string>
+    <string name="sign_in_with_google">Sign in with Google</string>
+    <string name="tap_for_balance">Tap for Balance</string>
+    <string name="nav_home">Home</string>
+    <string name="nav_savings">Savings</string>
+    <string name="nav_scan_qr">Scan QR</string>
+    <string name="nav_inbox">Statement</string>
+    <string name="nav_profile">My TakaPay</string>
+    <string name="action_send_money">Send Money</string>
+    <string name="action_mobile_recharge">Mobile Recharge</string>
+    <string name="action_cash_out">Cash Out</string>
+    <string name="action_make_payment">Merchant Pay</string>
+    <string name="action_add_money">Add Money</string>
+    <string name="action_pay_bill">Pay Bill</string>
+    <string name="action_savings">Savings DPS</string>
+    <string name="action_my_qr">My QR</string>
+    <string name="biometric_prompt_title">TakaPay Biometric Security</string>
+    <string name="biometric_prompt_subtitle">Verify your identity to authorize this financial transaction</string>
+</resources>

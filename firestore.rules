@@ -1,0 +1,448 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // Global safety net: Default deny all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // Hardened Global Helpers
+    function isSignedIn() {
+      return request.auth != null;
+    }
+
+    function incoming() {
+      return request.resource.data;
+    }
+
+    function existing() {
+      return resource.data;
+    }
+
+    function isValidId(id) {
+      return id is string && id.size() >= 1 && id.size() <= 128 && id.matches('^[a-zA-Z0-9_\\-]+$');
+    }
+
+    // 1. WalletProfile Validation Helper
+    function isValidWalletProfile(data) {
+      return data.userId is string &&
+             data.userId == request.auth.uid &&
+             data.userId.size() >= 1 &&
+             data.userId.size() <= 128 &&
+             data.displayName is string &&
+             data.displayName.size() >= 1 &&
+             data.displayName.size() <= 80 &&
+             data.accountNumber is string &&
+             data.accountNumber.size() >= 3 &&
+             data.accountNumber.size() <= 24 &&
+             data.pinHash is string &&
+             data.pinHash.size() >= 4 &&
+             data.pinHash.size() <= 64 &&
+             data.biometricEnabled is bool &&
+             data.balanceBdt is number &&
+             data.balanceBdt >= 0 &&
+             data.balanceBdt <= 100000000 &&
+             data.totalSavingsBdt is number &&
+             data.totalSavingsBdt >= 0 &&
+             data.totalSavingsBdt <= 100000000 &&
+             data.rewardPoints is int &&
+             data.rewardPoints >= 0 &&
+             data.rewardPoints <= 10000000 &&
+             data.kycTier is string &&
+             data.kycTier in ['Verified', 'Premier', 'Student'] &&
+             data.createdAt is timestamp &&
+             data.createdAt <= request.time &&
+             data.updatedAt is timestamp &&
+             data.updatedAt <= request.time;
+    }
+
+    // 2. MfsTransaction Validation Helper
+    function isValidTransaction(data) {
+      return data.userId is string &&
+             data.userId == request.auth.uid &&
+             data.userId.size() >= 1 &&
+             data.userId.size() <= 128 &&
+             data.type is string &&
+             data.type in [
+               'SEND_MONEY',
+               'ADD_MONEY',
+               'CASH_OUT',
+               'MOBILE_RECHARGE',
+               'UTILITY_BILL',
+               'MERCHANT_PAY',
+               'SAVINGS_DEPOSIT',
+               'SAVINGS_WITHDRAW'
+             ] &&
+             data.title is string &&
+             data.title.size() >= 1 &&
+             data.title.size() <= 100 &&
+             data.recipientNumber is string &&
+             data.recipientNumber.size() >= 1 &&
+             data.recipientNumber.size() <= 60 &&
+             data.recipientName is string &&
+             data.recipientName.size() >= 1 &&
+             data.recipientName.size() <= 100 &&
+             data.operatorOrProvider is string &&
+             data.operatorOrProvider.size() >= 1 &&
+             data.operatorOrProvider.size() <= 60 &&
+             data.amountBdt is number &&
+             data.amountBdt > 0 &&
+             data.amountBdt <= 10000000 &&
+             data.feeBdt is number &&
+             data.feeBdt >= 0 &&
+             data.feeBdt <= 100000 &&
+             data.cashbackBdt is number &&
+             data.cashbackBdt >= 0 &&
+             data.cashbackBdt <= 100000 &&
+             data.balanceAfterBdt is number &&
+             data.balanceAfterBdt >= 0 &&
+             data.balanceAfterBdt <= 100000000 &&
+             data.referenceNote is string &&
+             data.referenceNote.size() <= 140 &&
+             data.trxId is string &&
+             data.trxId.size() >= 4 &&
+             data.trxId.size() <= 32 &&
+             data.authMethod is string &&
+             data.authMethod in ['BIOMETRIC', 'PIN'] &&
+             data.status is string &&
+             data.status in ['COMPLETED'] &&
+             data.createdAt is timestamp &&
+             data.createdAt <= request.time &&
+             data.updatedAt is timestamp &&
+             data.updatedAt <= request.time;
+    }
+
+    // 3. SavingsGoal Validation Helper
+    function isValidSavingsGoal(data) {
+      return data.userId is string &&
+             data.userId == request.auth.uid &&
+             data.userId.size() >= 1 &&
+             data.userId.size() <= 128 &&
+             data.title is string &&
+             data.title.size() >= 1 &&
+             data.title.size() <= 80 &&
+             data.category is string &&
+             data.category in ['DPS', 'Emergency', 'Festival', 'Education', 'Gadget', 'Travel'] &&
+             data.targetAmountBdt is number &&
+             data.targetAmountBdt > 0 &&
+             data.targetAmountBdt <= 100000000 &&
+             data.savedAmountBdt is number &&
+             data.savedAmountBdt >= 0 &&
+             data.savedAmountBdt <= 100000000 &&
+             data.monthlyDepositBdt is number &&
+             data.monthlyDepositBdt >= 0 &&
+             data.monthlyDepositBdt <= 10000000 &&
+             data.interestRatePercent is number &&
+             data.interestRatePercent >= 0 &&
+             data.interestRatePercent <= 25 &&
+             data.institutionName is string &&
+             data.institutionName.size() >= 1 &&
+             data.institutionName.size() <= 60 &&
+             data.autoSaveRoundUp is bool &&
+             data.status is string &&
+             data.status in ['ACTIVE', 'COMPLETED', 'WITHDRAWN'] &&
+             data.createdAt is timestamp &&
+             data.createdAt <= request.time &&
+             data.updatedAt is timestamp &&
+             data.updatedAt <= request.time;
+    }
+
+    // 4. SavedBiller Validation Helper
+    function isValidSavedBiller(data) {
+      return data.userId is string &&
+             data.userId == request.auth.uid &&
+             data.userId.size() >= 1 &&
+             data.userId.size() <= 128 &&
+             data.billerType is string &&
+             data.billerType in ['CONTACT', 'UTILITY', 'MERCHANT', 'AGENT'] &&
+             data.name is string &&
+             data.name.size() >= 1 &&
+             data.name.size() <= 80 &&
+             data.accountOrMeterNo is string &&
+             data.accountOrMeterNo.size() >= 1 &&
+             data.accountOrMeterNo.size() <= 50 &&
+             data.providerCategory is string &&
+             data.providerCategory.size() >= 1 &&
+             data.providerCategory.size() <= 50 &&
+             data.createdAt is timestamp &&
+             data.createdAt <= request.time &&
+             data.updatedAt is timestamp &&
+             data.updatedAt <= request.time;
+    }
+
+    // Collection 1: /wallets/{userId}
+    match /wallets/{userId} {
+      allow get: if isSignedIn() && isValidId(userId) && request.auth.uid == userId;
+      allow list: if isSignedIn() && resource.data.userId == request.auth.uid;
+
+      allow create: if isSignedIn() &&
+                       isValidId(userId) &&
+                       request.auth.uid == userId &&
+                       incoming().keys().hasAll([
+                         'userId',
+                         'displayName',
+                         'accountNumber',
+                         'pinHash',
+                         'biometricEnabled',
+                         'balanceBdt',
+                         'totalSavingsBdt',
+                         'rewardPoints',
+                         'kycTier',
+                         'createdAt',
+                         'updatedAt'
+                       ]) &&
+                       incoming().keys().hasOnly([
+                         'userId',
+                         'displayName',
+                         'accountNumber',
+                         'pinHash',
+                         'biometricEnabled',
+                         'balanceBdt',
+                         'totalSavingsBdt',
+                         'rewardPoints',
+                         'kycTier',
+                         'createdAt',
+                         'updatedAt'
+                       ]) &&
+                       isValidWalletProfile(incoming());
+
+      allow update: if (
+        isSignedIn() &&
+        isValidId(userId) &&
+        request.auth.uid == userId &&
+        isValidWalletProfile(incoming()) &&
+        incoming().userId == existing().userId &&
+        incoming().createdAt == existing().createdAt &&
+        (
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'displayName',
+            'accountNumber',
+            'pinHash',
+            'biometricEnabled',
+            'balanceBdt',
+            'totalSavingsBdt',
+            'rewardPoints',
+            'kycTier',
+            'updatedAt'
+          ])
+        )
+      );
+
+      allow delete: if isSignedIn() && isValidId(userId) && request.auth.uid == userId;
+    }
+
+    // Collection 2: /users/{userId}/transactions/{transactionId}
+    match /users/{userId}/transactions/{transactionId} {
+      allow get: if isSignedIn() &&
+                    isValidId(userId) &&
+                    isValidId(transactionId) &&
+                    request.auth.uid == userId &&
+                    resource.data.userId == request.auth.uid;
+
+      allow list: if isSignedIn() &&
+                     request.auth.uid == userId &&
+                     resource.data.userId == request.auth.uid;
+
+      allow create: if isSignedIn() &&
+                       isValidId(userId) &&
+                       isValidId(transactionId) &&
+                       request.auth.uid == userId &&
+                       incoming().keys().hasAll([
+                         'userId',
+                         'type',
+                         'title',
+                         'recipientNumber',
+                         'recipientName',
+                         'operatorOrProvider',
+                         'amountBdt',
+                         'feeBdt',
+                         'cashbackBdt',
+                         'balanceAfterBdt',
+                         'referenceNote',
+                         'trxId',
+                         'authMethod',
+                         'status',
+                         'createdAt',
+                         'updatedAt'
+                       ]) &&
+                       incoming().keys().hasOnly([
+                         'userId',
+                         'type',
+                         'title',
+                         'recipientNumber',
+                         'recipientName',
+                         'operatorOrProvider',
+                         'amountBdt',
+                         'feeBdt',
+                         'cashbackBdt',
+                         'balanceAfterBdt',
+                         'referenceNote',
+                         'trxId',
+                         'authMethod',
+                         'status',
+                         'createdAt',
+                         'updatedAt'
+                       ]) &&
+                       isValidTransaction(incoming());
+
+      allow update: if (
+        isSignedIn() &&
+        isValidId(userId) &&
+        isValidId(transactionId) &&
+        request.auth.uid == userId &&
+        isValidTransaction(incoming()) &&
+        incoming().userId == existing().userId &&
+        incoming().createdAt == existing().createdAt &&
+        incoming().trxId == existing().trxId &&
+        incoming().amountBdt == existing().amountBdt &&
+        (
+          incoming().diff(existing()).affectedKeys().hasOnly(['referenceNote', 'updatedAt'])
+        )
+      );
+
+      allow delete: if isSignedIn() &&
+                       isValidId(userId) &&
+                       isValidId(transactionId) &&
+                       request.auth.uid == userId;
+    }
+
+    // Collection 3: /users/{userId}/savings_goals/{goalId}
+    match /users/{userId}/savings_goals/{goalId} {
+      allow get: if isSignedIn() &&
+                    isValidId(userId) &&
+                    isValidId(goalId) &&
+                    request.auth.uid == userId &&
+                    resource.data.userId == request.auth.uid;
+
+      allow list: if isSignedIn() &&
+                     request.auth.uid == userId &&
+                     resource.data.userId == request.auth.uid;
+
+      allow create: if isSignedIn() &&
+                       isValidId(userId) &&
+                       isValidId(goalId) &&
+                       request.auth.uid == userId &&
+                       incoming().keys().hasAll([
+                         'userId',
+                         'title',
+                         'category',
+                         'targetAmountBdt',
+                         'savedAmountBdt',
+                         'monthlyDepositBdt',
+                         'interestRatePercent',
+                         'institutionName',
+                         'autoSaveRoundUp',
+                         'status',
+                         'createdAt',
+                         'updatedAt'
+                       ]) &&
+                       incoming().keys().hasOnly([
+                         'userId',
+                         'title',
+                         'category',
+                         'targetAmountBdt',
+                         'savedAmountBdt',
+                         'monthlyDepositBdt',
+                         'interestRatePercent',
+                         'institutionName',
+                         'autoSaveRoundUp',
+                         'status',
+                         'createdAt',
+                         'updatedAt'
+                       ]) &&
+                       isValidSavingsGoal(incoming());
+
+      allow update: if (
+        isSignedIn() &&
+        isValidId(userId) &&
+        isValidId(goalId) &&
+        request.auth.uid == userId &&
+        isValidSavingsGoal(incoming()) &&
+        incoming().userId == existing().userId &&
+        incoming().createdAt == existing().createdAt &&
+        (
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'title',
+            'category',
+            'targetAmountBdt',
+            'savedAmountBdt',
+            'monthlyDepositBdt',
+            'interestRatePercent',
+            'institutionName',
+            'autoSaveRoundUp',
+            'status',
+            'updatedAt'
+          ])
+        )
+      );
+
+      allow delete: if isSignedIn() &&
+                       isValidId(userId) &&
+                       isValidId(goalId) &&
+                       request.auth.uid == userId;
+    }
+
+    // Collection 4: /users/{userId}/saved_billers/{billerId}
+    match /users/{userId}/saved_billers/{billerId} {
+      allow get: if isSignedIn() &&
+                    isValidId(userId) &&
+                    isValidId(billerId) &&
+                    request.auth.uid == userId &&
+                    resource.data.userId == request.auth.uid;
+
+      allow list: if isSignedIn() &&
+                     request.auth.uid == userId &&
+                     resource.data.userId == request.auth.uid;
+
+      allow create: if isSignedIn() &&
+                       isValidId(userId) &&
+                       isValidId(billerId) &&
+                       request.auth.uid == userId &&
+                       incoming().keys().hasAll([
+                         'userId',
+                         'billerType',
+                         'name',
+                         'accountOrMeterNo',
+                         'providerCategory',
+                         'createdAt',
+                         'updatedAt'
+                       ]) &&
+                       incoming().keys().hasOnly([
+                         'userId',
+                         'billerType',
+                         'name',
+                         'accountOrMeterNo',
+                         'providerCategory',
+                         'createdAt',
+                         'updatedAt'
+                       ]) &&
+                       isValidSavedBiller(incoming());
+
+      allow update: if (
+        isSignedIn() &&
+        isValidId(userId) &&
+        isValidId(billerId) &&
+        request.auth.uid == userId &&
+        isValidSavedBiller(incoming()) &&
+        incoming().userId == existing().userId &&
+        incoming().createdAt == existing().createdAt &&
+        (
+          incoming().diff(existing()).affectedKeys().hasOnly([
+            'billerType',
+            'name',
+            'accountOrMeterNo',
+            'providerCategory',
+            'updatedAt'
+          ])
+        )
+      );
+
+      allow delete: if isSignedIn() &&
+                       isValidId(userId) &&
+                       isValidId(billerId) &&
+                       request.auth.uid == userId;
+    }
+  }
+}
